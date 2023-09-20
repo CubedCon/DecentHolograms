@@ -11,9 +11,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.jetbrains.annotations.Nullable;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -182,7 +179,7 @@ public final class SkullUtils {
 	 */
 	@Nullable
 	public static String getTextureFromURLByPlayerName(String username) {
-		final String uuid = getPlayerUUID(username);
+		/*final String uuid = getPlayerUUID(username);
 		if (uuid == null) {
 			return null;
 		}
@@ -199,7 +196,7 @@ public final class SkullUtils {
 
 			return data.get("value").toString();
 		} catch (Exception ignored) {
-		}
+		}*/
 		return null;
 	}
 
@@ -211,7 +208,7 @@ public final class SkullUtils {
 	 */
 	@Nullable
 	public static String getPlayerUUID(String playerName) {
-		try {
+		/*try {
 			String url = "https://api.minetools.eu/uuid/" + playerName;
 			JSONParser jsonParser = new JSONParser();
 			String userData = readUrl(url);
@@ -223,7 +220,7 @@ public final class SkullUtils {
 				return jsonData.get("id").toString();
 			}
 		} catch (Exception ignored) {
-		}
+		}*/
 		return null;
 	}
 

@@ -11,6 +11,7 @@ import org.bukkit.SkullType;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.Map;
 
@@ -24,6 +25,7 @@ public class HologramItem {
 	private Material material;
 	private short durability = 0;
 	private boolean enchanted = false;
+	private int modelData = -1;
 
 	public HologramItem(String string) {
 		this.content = string;
@@ -57,6 +59,11 @@ public class HologramItem {
 		if (enchanted) itemBuilder.withUnsafeEnchantment(Enchantment.DURABILITY, 0);
 
 		ItemStack itemStack = itemBuilder.toItemStack();
+		if(this.getModelData() > -1) {
+			final ItemMeta itemMeta = itemStack.getItemMeta();
+			itemMeta.setCustomModelData(this.getModelData());
+			itemStack.setItemMeta(itemMeta);
+		}
 		if (nbt != null) {
 			try {
 				// noinspection deprecation
@@ -76,6 +83,12 @@ public class HologramItem {
 			if (nbtStart > 0 && nbtEnd > 0 && nbtEnd > nbtStart) {
 				this.nbt = string.substring(nbtStart, nbtEnd + 1);
 				string = string.substring(0, nbtStart) + string.substring(nbtEnd + 1);
+			}
+		}
+
+		for(String word : string.split(" ")) {
+			if(word.startsWith("MODEL:")) {
+				this.modelData = Integer.parseInt(word.split(":")[1]);
 			}
 		}
 
@@ -138,6 +151,12 @@ public class HologramItem {
 				stringBuilder.append("(").append(owner).append(")");
 			} else if (texture != null) {
 				stringBuilder.append("(").append(texture).append(")");
+			}
+		}
+		if(itemStack.getItemMeta() != null) {
+			if(itemStack.getItemMeta().hasCustomModelData()) {
+				stringBuilder.append(" MODEL:").append(itemStack.getItemMeta()
+						.getCustomModelData());
 			}
 		}
 		return new HologramItem(stringBuilder.toString());
