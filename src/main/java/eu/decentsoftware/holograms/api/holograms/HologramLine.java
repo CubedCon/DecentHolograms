@@ -133,6 +133,8 @@ public class HologramLine extends HologramObject {
     private HologramItem item;
     private HologramEntity entity;
 
+    private ItemStack itemStack;
+
     private volatile boolean containsAnimations;
     private volatile boolean containsPlaceholders;
 
@@ -426,6 +428,8 @@ public class HologramLine extends HologramObject {
                     case ICON:
                         nms.showFakeEntityArmorStand(player, getLocation(), entityIds[0], true, true, false);
                         ItemStack itemStack1 = containsPlaceholders ? HologramItem.parseItemStack(item.getContent(), player) : item.parse();
+                        if(this.itemStack != null)
+                            itemStack1 = this.itemStack;
                         nms.showFakeEntityItem(player, getLocation(), itemStack1, entityIds[1]);
                         nms.attachFakeEntity(player, entityIds[0], entityIds[1]);
                         break;

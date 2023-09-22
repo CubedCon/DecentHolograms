@@ -699,7 +699,19 @@ public final class DHAPI {
      */
     public static void setHologramLine(Hologram hologram, int lineIndex, ItemStack item) throws IllegalArgumentException {
         Validate.notNull(item);
-        setHologramLine(hologram, lineIndex, "#ICON:" + HologramItem.fromItemStack(item).getContent());
+        //setHologramLine(hologram, lineIndex, "#ICON:" + HologramItem.fromItemStack(item).getContent());
+        final HologramLine line = hologram.getPage(0).getLine(lineIndex);
+        line.setItemStack(item);
+        line.update();
+
+        Player[] viewers = line.getViewerPlayers().toArray(new Player[0]);
+        line.hide();
+        line.show(viewers);
+
+        // Realign lines in case the heights changed.
+        if (line.getParent() != null) {
+            line.getParent().realignLines();
+        }
     }
 
     /**
