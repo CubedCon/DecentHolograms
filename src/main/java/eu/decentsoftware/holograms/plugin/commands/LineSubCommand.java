@@ -122,8 +122,8 @@ public class LineSubCommand extends DecentCommand {
 
 	@CommandInfo(
 			permission = "dh.admin",
-			usage = "/dh line align <hologram> <page> <line1> <line2> <X|Z|XZ>",
-			description = "Align two lines in hologram on a specified axis.",
+			usage = "/dh line align <hologram> <page> <line1> <line2> <X|Z|XZ|FACE>",
+			description = "Align two lines in hologram on a specified axis or its facing angle.",
 			minArgs = 5
 	)
 	static class LineAlignSub extends DecentCommand {
@@ -157,6 +157,10 @@ public class LineSubCommand extends DecentCommand {
 					case "ZX":
 						line1.setOffsetX(line2.getOffsetX());
 						line1.setOffsetZ(line2.getOffsetZ());
+						break;
+					case "FACE":
+					case "FACING":
+						line1.setFacing(line2.getFacing());
 						break;
 					default:
 						Lang.LINE_ALIGN_AXIS.send(sender);
@@ -639,7 +643,7 @@ public class LineSubCommand extends DecentCommand {
 				final int index = Validator.getInteger(args[2], Lang.LINE_DOES_NOT_EXIST.getValue());
 				page.removeLine(index - 1);
 				if (page.size() == 0) {
-					hologram.removePage(pageIndex);
+					hologram.removePage(pageIndex - 1);
 					Lang.LINE_REMOVED.send(sender);
 					Lang.PAGE_DELETED.send(sender);
 				} else {

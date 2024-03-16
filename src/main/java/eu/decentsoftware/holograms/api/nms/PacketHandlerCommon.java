@@ -2,7 +2,11 @@ package eu.decentsoftware.holograms.api.nms;
 
 import eu.decentsoftware.holograms.api.DecentHologramsAPI;
 import eu.decentsoftware.holograms.api.actions.ClickType;
-import eu.decentsoftware.holograms.api.utils.reflect.*;
+import eu.decentsoftware.holograms.api.utils.reflect.ReflectConstructor;
+import eu.decentsoftware.holograms.api.utils.reflect.ReflectField;
+import eu.decentsoftware.holograms.api.utils.reflect.ReflectMethod;
+import eu.decentsoftware.holograms.api.utils.reflect.ReflectionUtil;
+import eu.decentsoftware.holograms.api.utils.reflect.Version;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import lombok.experimental.UtilityClass;
@@ -11,8 +15,8 @@ import org.bukkit.entity.Player;
 @UtilityClass
 public final class PacketHandlerCommon {
 
-    protected static final Class<?> ENTITY_USE_PACKET_CLASS;
-    protected static final ReflectField<Integer> ENTITY_USE_PACKET_ID_FIELD;
+    private static final Class<?> ENTITY_USE_PACKET_CLASS;
+    private static final ReflectField<Integer> ENTITY_USE_PACKET_ID_FIELD;
     private static final Class<?> PACKET_DATA_SERIALIZER_CLASS;
     private static final ReflectConstructor PACKET_DATA_SERIALIZER_CONSTRUCTOR;
     private static final ReflectMethod ENTITY_USE_PACKET_A_METHOD;
@@ -28,7 +32,9 @@ public final class PacketHandlerCommon {
         }
         ENTITY_USE_PACKET_ID_FIELD = new ReflectField<>(ENTITY_USE_PACKET_CLASS, "a");
         PACKET_DATA_SERIALIZER_CONSTRUCTOR = new ReflectConstructor(PACKET_DATA_SERIALIZER_CLASS, ByteBuf.class);
-        if (Version.afterOrEqual(Version.v1_19_R3)) {
+        if (Version.afterOrEqual(Version.v1_20_R3)) {
+            PACKET_DATA_SERIALIZER_READ_INT_METHOD = new ReflectMethod(PACKET_DATA_SERIALIZER_CLASS, "n");
+        } else if (Version.afterOrEqual(Version.v1_19_R3)) {
             PACKET_DATA_SERIALIZER_READ_INT_METHOD = new ReflectMethod(PACKET_DATA_SERIALIZER_CLASS, "m");
         } else if (Version.afterOrEqual(19)) {
             PACKET_DATA_SERIALIZER_READ_INT_METHOD = new ReflectMethod(PACKET_DATA_SERIALIZER_CLASS, "k");

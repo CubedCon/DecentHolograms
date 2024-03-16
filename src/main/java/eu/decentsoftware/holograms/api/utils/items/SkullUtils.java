@@ -3,6 +3,7 @@ package eu.decentsoftware.holograms.api.utils.items;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import com.mojang.authlib.properties.PropertyMap;
+import eu.decentsoftware.holograms.api.DecentHologramsAPI;
 import eu.decentsoftware.holograms.api.utils.reflect.Version;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
@@ -15,12 +16,15 @@ import org.jetbrains.annotations.Nullable;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Collection;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.logging.Level;
 
 /**
  * Utility class for modifying the textures or owners or skull ItemStacks.
@@ -35,6 +39,9 @@ public final class SkullUtils {
 	private static Field PROFILE_FIELD;
 	private static Method SET_PROFILE_METHOD;
 	private static boolean INITIALIZED = false;
+
+	private static Method PROPERTY_VALUE_METHOD;
+	private static Function<Property, String> VALUE_RESOLVER;
 
 	/**
 	 * Get the Base64 texture of the given skull ItemStack.
@@ -60,13 +67,33 @@ public final class SkullUtils {
 				return null;
 			}
 
+			if (VALUE_RESOLVER == null) {
+				try {
+					// Pre 1.20(.4?) uses getValue
+					Property.class.getMethod("getValue");
+					VALUE_RESOLVER = Property::getValue;
+				} catch (NoSuchMethodException ignored) {
+					// Since 1.20(.4?) the Property class is a record and utilizes record-style getter methods
+					//noinspection JavaReflectionMemberAccess - method does exist in newer versions
+					PROPERTY_VALUE_METHOD = Property.class.getMethod("value");
+					VALUE_RESOLVER = property -> {
+						try {
+							return (String) PROPERTY_VALUE_METHOD.invoke(property);
+						} catch (IllegalAccessException | InvocationTargetException e) {
+							DecentHologramsAPI.get().getLogger().log(Level.SEVERE, "Failed to invoke Property#value", e);
+						}
+						return null;
+					};
+				}
+			}
+
 			PropertyMap properties = profile.getProperties();
 			Collection<Property> property = properties.get("textures");
 			if (property != null && !property.isEmpty()) {
-				return property.stream().findFirst().get().getValue();
+				return VALUE_RESOLVER.apply(property.iterator().next());
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			DecentHologramsAPI.get().getLogger().log(Level.SEVERE, "Unhandled exception while retrieving skull texture", e);
 		}
 		return null;
 	}
@@ -102,7 +129,7 @@ public final class SkullUtils {
 
 				if (SET_PROFILE_METHOD == null && !INITIALIZED) {
 					try {
-						// This method only exists in versions 1.16 and up. For older versions we use reflection
+						// This method only exists in versions 1.16 and up. For older versions, we use reflection
 						// to set the profile field directly.
 						SET_PROFILE_METHOD = meta.getClass().getDeclaredMethod("setProfile", GameProfile.class);
 						SET_PROFILE_METHOD.setAccessible(true);
@@ -129,7 +156,7 @@ public final class SkullUtils {
 				itemStack.setDurability((short) SkullType.PLAYER.ordinal());
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			DecentHologramsAPI.get().getLogger().log(Level.SEVERE, "Unhandled exception while setting skull texture", e);
 		}
 	}
 
@@ -140,6 +167,7 @@ public final class SkullUtils {
 	 * @return The skull owner.
 	 * @since 2.7.5
 	 */
+	@SuppressWarnings("deprecation")
 	@Nullable
 	public static String getSkullOwner(@NonNull ItemStack itemStack) {
 		ItemMeta meta = itemStack.getItemMeta();
@@ -156,6 +184,7 @@ public final class SkullUtils {
 	 * @param owner     The new skull owner.
 	 * @since 2.7.5
 	 */
+	@SuppressWarnings("deprecation")
 	public static void setSkullOwner(@NonNull ItemStack itemStack, @NonNull String owner) {
 		ItemMeta meta = itemStack.getItemMeta();
 		if (meta instanceof SkullMeta) {
@@ -204,7 +233,7 @@ public final class SkullUtils {
 	 * Fetch the UUID of a player from Minetools's API.
 	 *
 	 * @param playerName The player name.
-	 * @return
+	 * @return The UUID or null if the operation fails.
 	 */
 	@Nullable
 	public static String getPlayerUUID(String playerName) {
@@ -229,7 +258,7 @@ public final class SkullUtils {
 	 *
 	 * @param urlString The URL.
 	 * @return The content.
-	 * @throws Exception
+	 * @throws Exception If anything goes wrong.
 	 */
 	@NonNull
 	private static String readUrl(String urlString) throws Exception {

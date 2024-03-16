@@ -1,6 +1,5 @@
 package eu.decentsoftware.holograms.api.holograms;
 
-import com.google.common.collect.ImmutableList;
 import eu.decentsoftware.holograms.api.DecentHolograms;
 import eu.decentsoftware.holograms.api.DecentHologramsAPI;
 import eu.decentsoftware.holograms.api.Settings;
@@ -30,12 +29,19 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 @Getter
@@ -99,7 +105,7 @@ public class Hologram extends UpdatingHologramObject implements ITicked {
             name = fileName.substring(0, fileName.length() - 4);
         }
 
-        if (name == null || name.isEmpty()) {
+        if (name.isEmpty()) {
             // This shouldn't happen when loading holograms from files.
             throw new IllegalArgumentException("Hologram name cannot be null or empty.");
         }
@@ -164,13 +170,12 @@ public class Hologram extends UpdatingHologramObject implements ITicked {
                             try {
                                 page.addAction(clickType, new Action(clickTypeAction));
                             } catch (Exception e) {
-                                DECENT_HOLOGRAMS.getPlugin().getLogger().warning(String.format(
+                                DECENT_HOLOGRAMS.getPlugin().getLogger().log(Level.WARNING, String.format(
                                         "Failed to parse action '%s' for hologram '%s' at page %s! Skipping...",
                                         clickTypeAction,
                                         hologram.getName(),
                                         page.getIndex()
-                                ));
-                                e.printStackTrace();
+                                ), e);
                             }
                         }
                     }
@@ -211,7 +216,7 @@ public class Hologram extends UpdatingHologramObject implements ITicked {
     protected final Lock lock = new ReentrantLock();
 
     /**
-     * This object server as a mutex for all visibility related operations.
+     * This object serves as a mutex for all visibility-related operations.
      * <p>
      * For example, when we want to hide a hologram, that's already being
      * updated on another thread, we would need to wait for the update to
@@ -387,7 +392,7 @@ public class Hologram extends UpdatingHologramObject implements ITicked {
 
         super.setFacing(facing);
 
-        // Update the facing for all lines, that don't already have a different facing set.
+        // Update the facing for all lines, that don't yet have a different facing set.
         // We want to keep the hologram facing working as a "default" value, but we don't want
         // it to override custom line facing.
         for (HologramPage page : this.pages) {
@@ -908,7 +913,7 @@ public class Hologram extends UpdatingHologramObject implements ITicked {
     }
 
     public HologramPage removePage(int index) {
-        if (index < 0 || index > size()) {
+        if (index < 0 || index >= size()) {
             return null;
         }
 
@@ -955,15 +960,6 @@ public class Hologram extends UpdatingHologramObject implements ITicked {
         viewers1.forEach(player -> show(player, index2));
         viewers2.forEach(player -> show(player, index1));
         return true;
-    }
-
-    /**
-     * Get the list of all pages in this hologram.
-     *
-     * @return List of all pages in this hologram.
-     */
-    public List<HologramPage> getPages() {
-        return ImmutableList.copyOf(pages);
     }
 
 }

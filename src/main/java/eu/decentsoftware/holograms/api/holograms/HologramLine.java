@@ -119,16 +119,16 @@ public class HologramLine extends HologramObject {
      *	Fields
      */
 
-    private final @Nullable HologramPage parent;
-    private final @NonNull Map<UUID, String> playerTextMap = new ConcurrentHashMap<>();
-    private final @NonNull Map<UUID, String> lastTextMap = new ConcurrentHashMap<>();
+    private final HologramPage parent;
+    private final Map<UUID, String> playerTextMap = new ConcurrentHashMap<>();
+    private final Map<UUID, String> lastTextMap = new ConcurrentHashMap<>();
     private HologramLineType type;
     private int[] entityIds = new int[2];
-    private final @NonNull AtomicDouble offsetX = new AtomicDouble(0d);
-    private final @NonNull AtomicDouble offsetY = new AtomicDouble(0d);
-    private final @NonNull AtomicDouble offsetZ = new AtomicDouble(0d);
+    private final AtomicDouble offsetX = new AtomicDouble(0d);
+    private final AtomicDouble offsetY = new AtomicDouble(0d);
+    private final AtomicDouble offsetZ = new AtomicDouble(0d);
     private double height;
-    private @NonNull String content;
+    private String content;
     private String text;
     private HologramItem item;
     private HologramEntity entity;
@@ -170,7 +170,7 @@ public class HologramLine extends HologramObject {
      * <p>
      * This method also parses the content and updates the line.
      * <p>
-     * NOTE: The new content can be null but if it is, it will be
+     * NOTE: The new content can be null, but if it is, it will be
      * replaced with an empty string. It is recommended to not use
      * null as content.
      *
@@ -198,10 +198,6 @@ public class HologramLine extends HologramObject {
     public void disable() {
         super.disable();
         this.hide();
-    }
-
-    public boolean hasParent() {
-        return parent != null;
     }
 
     /**
@@ -345,16 +341,16 @@ public class HologramLine extends HologramObject {
     private String parsePlaceholders(@NotNull String string, @NonNull Player player, boolean papi) {
         // Replace internal placeholders.
         string = string.replace("{player}", player.getName());
-        string = string.replace("{page}", String.valueOf(hasParent() ? parent.getIndex() + 1 : 1));
-        string = string.replace("{pages}", String.valueOf(hasParent() ? parent.getParent().size() : 1));
+        string = string.replace("{page}", String.valueOf(parent != null ? parent.getIndex() + 1 : 1));
+        string = string.replace("{pages}", String.valueOf(parent != null ? parent.getParent().size() : 1));
 
         // Replace PlaceholderAPI placeholders.
         if (papi) {
             string = PAPI.setPlaceholders(player, string);
             if (string == null) {
-                // Some PlacehoderAPI placeholders might be replaced with null, so if the line content
+                // Some PlaceholderAPI placeholders might be replaced with null, so if the line content
                 // is just a single placeholder, there is a possibility that the line will be null. So,
-                // if that happens, just replace the null with an empty string.
+                // if that happens, replace the null with an empty string.
                 string = "";
             }
         }
@@ -364,7 +360,7 @@ public class HologramLine extends HologramObject {
     @NonNull
     // Parses custom replacements that can be defined in the config
     private String parseCustomReplacements() {
-        if (content != null && !content.isEmpty()) {
+        if (!content.isEmpty()) {
             for (Map.Entry<String, String> replacement : Settings.CUSTOM_REPLACEMENTS.entrySet()) {
                 content = content.replace(replacement.getKey(), replacement.getValue());
             }
@@ -376,7 +372,7 @@ public class HologramLine extends HologramObject {
      * Check if the given player has the permission to see this line, if any.
      *
      * @param player The player.
-     * @return True if the player has the permission to see this line, false otherwise.
+     * @return True, if the player has the permission to see this line, false otherwise.
      */
     public boolean hasPermission(@NonNull Player player) {
         return permission == null || permission.isEmpty() || player.hasPermission(permission);
@@ -387,7 +383,7 @@ public class HologramLine extends HologramObject {
      * if the player has the permission to see this line and if they are in the display
      * range. Then it updates the visibility accordingly.
      *
-     * @param player The player to update visbility for.
+     * @param player The player to update visibility for.
      */
     public void updateVisibility(@NonNull Player player) {
         if (isVisible(player) && !(hasPermission(player) && isInDisplayRange(player))) {
@@ -538,7 +534,7 @@ public class HologramLine extends HologramObject {
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean isInUpdateRange(@NonNull Player player) {
-        return parent == null || parent.getParent().isInDisplayRange(player);
+        return parent == null || parent.getParent().isInUpdateRange(player);
     }
 
     public double getOffsetX() {
